@@ -1,0 +1,20 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Edit patient{% endblock %}
+{% block dashboard_content %}
+<div class="row">
+    <div class="col-lg-9 col-xl-7">
+        <h1 class="h3 mb-3">Edit {{ patient.get_full_name|default:patient.username }}</h1>
+        <form method="post" novalidate class="card border-0 shadow-sm">
+            <div class="card-body">
+                {% csrf_token %}
+                <h2 class="h6 text-muted">Account</h2>
+                {% include "partials/form_fields.html" with form=user_form %}
+                <h2 class="h6 text-muted mt-2">Patient details</h2>
+                {% include "partials/form_fields.html" with form=profile_form %}
+                <button type="submit" class="btn btn-clinic">Save changes</button>
+                <a href="{% url 'dashboard:patient_detail' patient.pk %}" class="btn btn-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

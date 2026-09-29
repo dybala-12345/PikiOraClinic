@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block full_width %}
+{% with url_name=request.resolver_match.url_name %}
+<div class="container-fluid">
+    <div class="row">
+        <aside class="col-lg-2 dashboard-sidebar py-3 border-end bg-white">
+            <p class="text-uppercase small text-muted fw-semibold px-2 mb-2">Administrator</p>
+            <nav class="nav nav-pills flex-lg-column gap-1">
+                <a class="nav-link {% if url_name == 'home' %}active{% endif %}" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i> Overview</a>
+                <a class="nav-link {% if 'doctor' in url_name or 'schedule' in url_name %}active{% endif %}" href="{% url 'dashboard:doctor_list' %}"><i class="bi bi-person-badge"></i> Doctors</a>
+                <a class="nav-link {% if 'slot' in url_name %}active{% endif %}" href="{% url 'dashboard:slot_list' %}"><i class="bi bi-calendar3"></i> Appointment slots</a>
+                <a class="nav-link {% if 'appointment' in url_name %}active{% endif %}" href="{% url 'dashboard:appointment_list' %}"><i class="bi bi-journal-medical"></i> Appointments</a>
+                <a class="nav-link {% if 'patient' in url_name %}active{% endif %}" href="{% url 'dashboard:patient_list' %}"><i class="bi bi-people"></i> Patients</a>
+            </nav>
+        </aside>
+        <div class="col-lg-10 py-4 px-lg-4">
+            {% include "partials/messages.html" %}
+            {% block dashboard_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endwith %}
+{% endblock %}

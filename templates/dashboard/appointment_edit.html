@@ -1,0 +1,20 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Edit appointment{% endblock %}
+{% block dashboard_content %}
+<div class="row g-4">
+    <div class="col-lg-7">
+        <h1 class="h3">Edit appointment #{{ appointment.pk|stringformat:"05d" }}</h1>
+        <p class="text-muted">Patient: <a href="{% url 'dashboard:patient_detail' appointment.patient.pk %}">{{ appointment.patient.get_full_name|default:appointment.patient.username }}</a>
+            &middot; currently {{ appointment.slot.doctor.full_name }}, {{ appointment.slot.date|date:"D j M Y" }} {{ appointment.slot.start_time|time:"H:i" }}</p>
+        <form method="post" novalidate class="card border-0 shadow-sm">
+            <div class="card-body">
+                {% csrf_token %}
+                {% include "partials/form_fields.html" with form=form %}
+                <p class="small text-muted">Only free slots (plus the current one) are listed, so an appointment can never be moved onto a booked time. The patient is notified of any change.</p>
+                <button type="submit" class="btn btn-clinic">Save changes</button>
+                <a href="{% url 'dashboard:appointment_list' %}" class="btn btn-link">Back</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

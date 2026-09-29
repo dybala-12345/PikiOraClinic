@@ -1,0 +1,96 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}{{ doctor.full_name }}{% endblock %}
+{% block dashboard_content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:doctor_list' %}">Doctors</a></li>
+    <li class="breadcrumb-item active">{{ doctor.full_name }}</li>
+</ol></nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">{{ doctor.full_name }}
+            {% if doctor.is_active %}<span class="badge bg-success fs-6 align-middle">Active</span>{% else %}<span class="badge bg-secondary fs-6 align-middle">Inactive</span>{% endif %}
+        </h1>
+        <div class="text-muted">{{ doctor.specialisation }}{% if doctor.qualifications %} &middot; {{ doctor.qualifications }}{% endif %}{% if doctor.room %} &middot; Room {{ doctor.room }}{% endif %}</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="{% url 'dashboard:doctor_edit' doctor.pk %}"><i class="bi bi-pencil"></i> Edit profile</a>
+        <a class="btn btn-outline-danger" href="{% url 'dashboard:doctor_delete' doctor.pk %}"><i class="bi bi-trash"></i> Delete</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-6">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white fw-semibold">Weekly consultation schedule</div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>Day</th><th>Hours</th><th>Slot length</th><th></th></tr></thead>
+                    <tbody>
+                    {% for session in schedules %}
+                        <tr>
+                            <td>{{ session.get_weekday_display }}</td>
+                            <td>{{ session.start_time|time:"H:i" }} - {{ session.end_time|time:"H:i" }}</td>
+                            <td>{{ session.slot_minutes }} min</td>
+                            <td class="text-end">
+                                <form method="post" action="{% url 'dashboard:schedule_delete' session.pk %}" onsubmit="return confirm('Remove this session?');">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" title="Remove"><i class="bi bi-x-lg"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="text-muted">No sessions yet - add one below.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-body border-top">
+                <h2 class="h6">Add a session</h2>
+                <form method="post" action="{% url 'dashboard:schedule_add' doctor.pk %}" novalidate>
+                    {% csrf_token %}
+                    {% if schedule_form.non_field_errors %}
+                        <div class="alert alert-danger py-2">{% for e in schedule_form.non_field_errors %}{{ e }} {% endfor %}</div>
+                    {% endif %}
+                    <div class="row g-2">
+                        <div class="col-sm-6 col-md-3">{% include "partials/field.html" with field=schedule_form.weekday %}</div>
+                        <div class="col-sm-6 col-md-3">{% include "partials/field.html" with field=schedule_form.start_time %}</div>
+                        <div class="col-sm-6 col-md-3">{% include "partials/field.html" with field=schedule_form.end_time %}</div>
+                        <div class="col-sm-6 col-md-3">{% include "partials/field.html" with field=schedule_form.slot_minutes %}</div>
+                    </div>
+                    <button class="btn btn-clinic btn-sm" type="submit">Add session</button>
+                </form>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div><strong>{{ free_slot_count }}</strong> free upcoming slot{{ free_slot_count|pluralize }}</div>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'dashboard:slot_list' %}?doctor={{ doctor.pk }}">View slots</a>
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'dashboard:slot_add' %}?doctor={{ doctor.pk }}">Add single slot</a>
+                    <a class="btn btn-sm btn-clinic" href="{% url 'dashboard:slot_generate' %}">Generate slots</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold">Next booked appointments</div>
+            <ul class="list-group list-group-flush">
+                {% for appt in upcoming_appointments %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ appt.slot.date|date:"D j M" }} {{ appt.slot.start_time|time:"H:i" }} &middot;
+                            <a href="{% url 'dashboard:patient_detail' appt.patient.pk %}">{{ appt.patient.get_full_name|default:appt.patient.username }}</a></span>
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'dashboard:appointment_edit' appt.pk %}">Manage</a>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">No upcoming bookings.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% if doctor.bio %}
+            <div class="card border-0 shadow-sm mt-4"><div class="card-body"><h2 class="h6">Bio</h2><p class="mb-0 small">{{ doctor.bio|linebreaksbr }}</p></div></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

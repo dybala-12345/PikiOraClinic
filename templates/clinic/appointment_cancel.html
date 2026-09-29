@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Cancel appointment{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-body p-4">
+                <h1 class="h4 text-danger">Cancel this appointment?</h1>
+                <p>{{ appointment.slot.doctor.full_name }} on <strong>{{ appointment.slot.date|date:"l j F Y" }}</strong>
+                    at <strong>{{ appointment.slot.start_time|time:"H:i" }}</strong>.</p>
+                <p class="small text-muted">The time will be released so other patients can book it.</p>
+                <form method="post" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Yes, cancel it</button>
+                    <a href="{{ appointment.get_absolute_url }}" class="btn btn-outline-secondary">Keep appointment</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

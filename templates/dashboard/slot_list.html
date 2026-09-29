@@ -1,0 +1,58 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Appointment slots{% endblock %}
+{% block dashboard_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h3 mb-0">Appointment slots</h1>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="{% url 'dashboard:slot_add' %}"><i class="bi bi-plus-lg"></i> Add slot</a>
+        <a class="btn btn-clinic" href="{% url 'dashboard:slot_generate' %}"><i class="bi bi-calendar-plus"></i> Generate from schedules</a>
+    </div>
+</div>
+
+<form method="get" class="card border-0 shadow-sm mb-3">
+    <div class="card-body row g-2 align-items-end">
+        <div class="col-md-3">{{ filter_form.doctor }}</div>
+        <div class="col-md-3">{{ filter_form.date }}</div>
+        <div class="col-md-2">{{ filter_form.status }}</div>
+        <div class="col-md-2 form-check ms-2">{{ filter_form.show_past }} <label class="form-check-label" for="{{ filter_form.show_past.id_for_label }}">Include past</label></div>
+        <div class="col-md-auto d-flex gap-2">
+            <button class="btn btn-outline-primary" type="submit">Filter</button>
+            <a class="btn btn-link" href="{% url 'dashboard:slot_list' %}">Reset</a>
+        </div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Date</th><th>Time</th><th>Doctor</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+            <tbody>
+            {% for slot in slots %}
+                <tr>
+                    <td>{{ slot.date|date:"D j M Y" }}</td>
+                    <td>{{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}</td>
+                    <td>{{ slot.doctor.full_name }}</td>
+                    <td>
+                        {% if slot.has_booking %}<span class="badge bg-primary">Booked</span>
+                        {% elif not slot.is_active %}<span class="badge bg-secondary">Closed</span>
+                        {% else %}<span class="badge bg-success">Available</span>{% endif %}
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <form method="post" action="{% url 'dashboard:slot_toggle' slot.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button class="btn btn-sm btn-outline-secondary" type="submit">{% if slot.is_active %}Close{% else %}Open{% endif %}</button>
+                        </form>
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'dashboard:slot_edit' slot.pk %}">Edit</a>
+                        {% if not slot.has_booking %}<a class="btn btn-sm btn-outline-danger" href="{% url 'dashboard:slot_delete' slot.pk %}">Delete</a>{% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-muted">No slots match these filters.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

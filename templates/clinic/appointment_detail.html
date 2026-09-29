@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Appointment details{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'clinic:my_appointments' %}">My appointments</a></li>
+    <li class="breadcrumb-item active" aria-current="page">#{{ appointment.pk|stringformat:"05d" }}</li>
+</ol></nav>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h1 class="h4">Appointment #{{ appointment.pk|stringformat:"05d" }}</h1>
+                    <span class="badge bg-{{ appointment.status_badge }}">{{ appointment.get_status_display }}</span>
+                </div>
+                <dl class="row mb-0 mt-3">
+                    <dt class="col-sm-4">Doctor</dt><dd class="col-sm-8">{{ appointment.slot.doctor.full_name }} ({{ appointment.slot.doctor.specialisation }})</dd>
+                    <dt class="col-sm-4">Date</dt><dd class="col-sm-8">{{ appointment.slot.date|date:"l j F Y" }}</dd>
+                    <dt class="col-sm-4">Time</dt><dd class="col-sm-8">{{ appointment.slot.start_time|time:"H:i" }} - {{ appointment.slot.end_time|time:"H:i" }}</dd>
+                    {% if appointment.slot.doctor.room %}<dt class="col-sm-4">Room</dt><dd class="col-sm-8">{{ appointment.slot.doctor.room }}</dd>{% endif %}
+                    <dt class="col-sm-4">Reason</dt><dd class="col-sm-8">{{ appointment.reason|linebreaksbr }}</dd>
+                    <dt class="col-sm-4">Booked on</dt><dd class="col-sm-8">{{ appointment.created_at|date:"j M Y, H:i" }}</dd>
+                    {% if appointment.cancelled_at %}<dt class="col-sm-4">Cancelled on</dt><dd class="col-sm-8">{{ appointment.cancelled_at|date:"j M Y, H:i" }}</dd>{% endif %}
+                </dl>
+                {% if appointment.can_be_changed %}
+                    <div class="mt-4 d-flex gap-2">
+                        <a href="{% url 'clinic:appointment_edit' appointment.pk %}" class="btn btn-outline-primary">Change time or reason</a>
+                        <a href="{% url 'clinic:appointment_cancel' appointment.pk %}" class="btn btn-outline-danger">Cancel appointment</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

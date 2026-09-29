@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}My details{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-7">
+        <h1 class="h3 mb-3">My details</h1>
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-sm-6">{% include "partials/field.html" with field=user_form.first_name %}</div>
+                        <div class="col-sm-6">{% include "partials/field.html" with field=user_form.last_name %}</div>
+                        <div class="col-sm-6">{% include "partials/field.html" with field=user_form.email %}</div>
+                        <div class="col-sm-6">{% include "partials/field.html" with field=profile_form.phone %}</div>
+                        <div class="col-sm-6">{% include "partials/field.html" with field=profile_form.date_of_birth %}</div>
+                        <div class="col-12">{% include "partials/field.html" with field=profile_form.address %}</div>
+                    </div>
+                    <p class="small text-muted">Username: <strong>{{ user.username }}</strong></p>
+                    <button type="submit" class="btn btn-clinic">Save changes</button>
+                    <a href="{% url 'password_change' %}" class="btn btn-outline-secondary">Change password</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}My appointments{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h3 mb-0">My appointments</h1>
+    <a href="{% url 'clinic:doctor_list' %}" class="btn btn-clinic"><i class="bi bi-calendar-plus"></i> Book new appointment</a>
+</div>
+
+<h2 class="h5 mt-4">Upcoming</h2>
+{% if upcoming %}
+    <div class="list-group shadow-sm mb-4">
+        {% for appt in upcoming %}
+            <div class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 py-3">
+                <div>
+                    <div class="fw-semibold">{{ appt.slot.date|date:"D j M Y" }}, {{ appt.slot.start_time|time:"H:i" }}</div>
+                    <div class="small text-muted">{{ appt.slot.doctor.full_name }} &middot; {{ appt.reason|truncatechars:60 }}</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ appt.get_absolute_url }}" class="btn btn-sm btn-outline-secondary">Details</a>
+                    <a href="{% url 'clinic:appointment_edit' appt.pk %}" class="btn btn-sm btn-outline-primary">Change</a>
+                    <a href="{% url 'clinic:appointment_cancel' appt.pk %}" class="btn btn-sm btn-outline-danger">Cancel</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-light border">You have no upcoming appointments.</div>
+{% endif %}
+
+<h2 class="h5 mt-4">Past &amp; cancelled</h2>
+{% if history %}
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead><tr><th>Date</th><th>Doctor</th><th>Reason</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for appt in history %}
+                <tr>
+                    <td><a href="{{ appt.get_absolute_url }}">{{ appt.slot.date|date:"j M Y" }} {{ appt.slot.start_time|time:"H:i" }}</a></td>
+                    <td>{{ appt.slot.doctor.full_name }}</td>
+                    <td>{{ appt.reason|truncatechars:40 }}</td>
+                    <td><span class="badge bg-{{ appt.status_badge }}">{% if appt.is_active_booking %}Past{% else %}{{ appt.get_status_display }}{% endif %}</span></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p class="text-muted">No past appointments yet.</p>
+{% endif %}
+{% endblock %}

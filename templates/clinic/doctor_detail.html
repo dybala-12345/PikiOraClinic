@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ doctor.full_name }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'clinic:doctor_list' %}">Doctors</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ doctor.full_name }}</li>
+</ol></nav>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar avatar-lg me-3">{{ doctor.initials }}</div>
+                    <div>
+                        <h1 class="h4 mb-0">{{ doctor.full_name }}</h1>
+                        <div class="text-muted">{{ doctor.specialisation }}</div>
+                    </div>
+                </div>
+                {% if not doctor.is_active %}<div class="alert alert-warning py-2 small">This doctor is inactive and hidden from patients.</div>{% endif %}
+                {% if doctor.qualifications %}<p class="mb-1"><i class="bi bi-mortarboard"></i> {{ doctor.qualifications }}</p>{% endif %}
+                {% if doctor.room %}<p class="mb-1"><i class="bi bi-door-open"></i> Room {{ doctor.room }}</p>{% endif %}
+                {% if doctor.bio %}<p class="small mt-3">{{ doctor.bio|linebreaksbr }}</p>{% endif %}
+
+                <h2 class="h6 mt-4">Weekly consultation hours</h2>
+                <table class="table table-sm mb-0">
+                    <tbody>
+                    {% for session in schedules %}
+                        <tr><td>{{ session.get_weekday_display }}</td><td class="text-end">{{ session.start_time|time:"H:i" }} - {{ session.end_time|time:"H:i" }}</td></tr>
+                    {% empty %}
+                        <tr><td class="text-muted">No schedule published yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <h2 class="h4">Available appointments</h2>
+        <p class="text-muted small">Showing free times for the next {{ booking_window_days }} days. Times are New Zealand time.</p>
+
+        {% if not user.is_authenticated %}
+            <div class="alert alert-info">
+                <a href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in</a> or
+                <a href="{% url 'accounts:register' %}">register</a> to book an appointment.
+            </div>
+        {% elif is_clinic_admin %}
+            <div class="alert alert-secondary">You are logged in as an administrator. Manage slots from the <a href="{% url 'dashboard:doctor_detail' doctor.pk %}">dashboard</a>.</div>
+        {% endif %}
+
+        {% for day, day_slots in slots_by_day %}
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white fw-semibold">{{ day|date:"l j F Y" }}</div>
+                <div class="card-body d-flex flex-wrap gap-2">
+                    {% for slot in day_slots %}
+                        {% if is_patient %}
+                            <a href="{% url 'clinic:book' slot.pk %}" class="btn btn-outline-success btn-sm slot-btn">{{ slot.start_time|time:"H:i" }}</a>
+                        {% else %}
+                            <span class="btn btn-outline-secondary btn-sm slot-btn disabled">{{ slot.start_time|time:"H:i" }}</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-light border">There are no free appointments with {{ doctor.full_name }} at the moment. Please check back soon or choose another doctor.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

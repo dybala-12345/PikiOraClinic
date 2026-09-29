@@ -1,0 +1,29 @@
+<div class="card h-100 shadow-sm border-0">
+    <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+            <div class="avatar me-3">{{ doctor.initials }}</div>
+            <div>
+                <h3 class="h6 mb-0">{{ doctor.full_name }}</h3>
+                <div class="small text-muted">{{ doctor.specialisation }}</div>
+            </div>
+        </div>
+        {% if doctor.qualifications %}<p class="small mb-2"><i class="bi bi-mortarboard"></i> {{ doctor.qualifications }}</p>{% endif %}
+        <ul class="list-unstyled small mb-3">
+            {% for session in doctor.schedules.all %}
+                <li><span class="fw-semibold">{{ session.get_weekday_display }}</span> {{ session.start_time|time:"H:i" }}-{{ session.end_time|time:"H:i" }}</li>
+            {% empty %}
+                <li class="text-muted">Schedule not yet published</li>
+            {% endfor %}
+        </ul>
+        <p class="small mb-0">
+            {% if doctor.next_slot_date %}
+                <span class="badge bg-success-subtle text-success-emphasis">Next free: {{ doctor.next_slot_date|date:"D j M" }} {{ doctor.next_slot_time|time:"H:i" }}</span>
+            {% else %}
+                <span class="badge bg-secondary-subtle text-secondary-emphasis">No free slots right now</span>
+            {% endif %}
+        </p>
+    </div>
+    <div class="card-footer bg-transparent border-0 pt-0 pb-3 px-3">
+        <a href="{{ doctor.get_absolute_url }}" class="btn btn-clinic btn-sm w-100">View times &amp; book</a>
+    </div>
+</div>

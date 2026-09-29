@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Change appointment{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <h1 class="h3">Change appointment</h1>
+        <p class="text-muted">With {{ appointment.slot.doctor.full_name }}. Currently booked for
+            <strong>{{ appointment.slot.date|date:"D j M Y" }} at {{ appointment.slot.start_time|time:"H:i" }}</strong>.</p>
+        <form method="post" novalidate class="card shadow-sm border-0">
+            <div class="card-body">
+                {% csrf_token %}
+                {% include "partials/form_fields.html" with form=form %}
+                <p class="small text-muted">Only free times with the same doctor are listed. To see a different doctor, cancel this appointment and book a new one.</p>
+                <button type="submit" class="btn btn-clinic">Save changes</button>
+                <a href="{{ appointment.get_absolute_url }}" class="btn btn-link">Back</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

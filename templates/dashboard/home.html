@@ -1,0 +1,61 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block dashboard_content %}
+<h1 class="h3 mb-4">Clinic overview <small class="text-muted fs-6">{% now "l j F Y" %}</small></h1>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl"><a class="card stat-card text-decoration-none" href="{% url 'dashboard:appointment_list' %}?date_from={% now 'Y-m-d' %}&date_to={% now 'Y-m-d' %}&status=booked"><div class="card-body"><div class="stat-value">{{ stats.today }}</div><div class="stat-label">Appointments today</div></div></a></div>
+    <div class="col-6 col-xl"><a class="card stat-card text-decoration-none" href="{% url 'dashboard:appointment_list' %}?status=booked"><div class="card-body"><div class="stat-value">{{ stats.upcoming }}</div><div class="stat-label">Upcoming bookings</div></div></a></div>
+    <div class="col-6 col-xl"><a class="card stat-card text-decoration-none" href="{% url 'dashboard:slot_list' %}?status=available"><div class="card-body"><div class="stat-value">{{ stats.free_week }}</div><div class="stat-label">Free slots (7 days)</div></div></a></div>
+    <div class="col-6 col-xl"><a class="card stat-card text-decoration-none" href="{% url 'dashboard:doctor_list' %}"><div class="card-body"><div class="stat-value">{{ stats.doctors }}</div><div class="stat-label">Active doctors</div></div></a></div>
+    <div class="col-6 col-xl"><a class="card stat-card text-decoration-none" href="{% url 'dashboard:patient_list' %}"><div class="card-body"><div class="stat-value">{{ stats.patients }}</div><div class="stat-label">Patients</div></div></a></div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a class="btn btn-clinic" href="{% url 'dashboard:doctor_add' %}"><i class="bi bi-plus-lg"></i> Add doctor</a>
+    <a class="btn btn-outline-primary" href="{% url 'dashboard:slot_generate' %}"><i class="bi bi-calendar-plus"></i> Generate slots</a>
+    <a class="btn btn-outline-primary" href="{% url 'dashboard:patient_add' %}"><i class="bi bi-person-plus"></i> Add patient</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold">Today's appointments</div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Time</th><th>Patient</th><th>Doctor</th><th></th></tr></thead>
+                    <tbody>
+                    {% for appt in todays_appointments %}
+                        <tr>
+                            <td>{{ appt.slot.start_time|time:"H:i" }}</td>
+                            <td><a href="{% url 'dashboard:patient_detail' appt.patient.pk %}">{{ appt.patient.get_full_name|default:appt.patient.username }}</a></td>
+                            <td>{{ appt.slot.doctor.full_name }}</td>
+                            <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{% url 'dashboard:appointment_edit' appt.pk %}">Manage</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="text-muted">No appointments booked for today.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-semibold">Latest booking activity</div>
+            <ul class="list-group list-group-flush">
+                {% for appt in recent_bookings %}
+                    <li class="list-group-item small">
+                        <span class="badge bg-{{ appt.status_badge }} me-1">{{ appt.get_status_display }}</span>
+                        {{ appt.patient.get_full_name|default:appt.patient.username }} with {{ appt.slot.doctor.full_name }},
+                        {{ appt.slot.date|date:"j M" }} {{ appt.slot.start_time|time:"H:i" }}
+                        <div class="text-muted">booked {{ appt.created_at|timesince }} ago</div>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">No bookings yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

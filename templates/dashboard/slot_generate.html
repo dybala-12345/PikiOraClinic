@@ -1,0 +1,19 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Generate slots{% endblock %}
+{% block dashboard_content %}
+<div class="row">
+    <div class="col-lg-8 col-xl-6">
+        <h1 class="h3">Generate appointment slots</h1>
+        <p class="text-muted">Creates bookable slots for every date in the range using each doctor's weekly schedule and slot length.
+            Slots that already exist are skipped, so it's safe to run more than once.</p>
+        <form method="post" novalidate class="card border-0 shadow-sm">
+            <div class="card-body">
+                {% csrf_token %}
+                {% include "partials/form_fields.html" with form=form %}
+                <button type="submit" class="btn btn-clinic">Generate slots</button>
+                <a href="{% url 'dashboard:slot_list' %}" class="btn btn-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
