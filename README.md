@@ -1,5 +1,7 @@
 # Piki Ora Medical Centre – Clinic Appointment System
 
+  **Live site:** https://pikioraclinic.onrender.com
+
 A Django web application that replaces Piki Ora Medical Centre's manual booking process.
 Patients register, log in and book appointments with doctors. Clinic staff manage doctors,
 schedules, appointment slots, bookings and patient accounts through a **custom administrator
