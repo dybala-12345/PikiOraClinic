@@ -1,5 +1,3 @@
-"""Patient account data that extends Django's built-in User model."""
-
 from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
@@ -11,12 +9,7 @@ phone_validator = RegexValidator(
 
 
 class PatientProfile(models.Model):
-    """
-    Extra details for a patient.
-
-    One-to-one with ``User``: the User holds login details (username,
-    password, name, e-mail) and this model holds the clinic-specific data.
-    """
+    # extra info for each patient, linked 1-to-1 with the normal django User
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,

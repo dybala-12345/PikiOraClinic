@@ -1,5 +1,4 @@
-# Django Admin registration - for development and testing only.
-# Clinic staff manage patient accounts through the custom dashboard (/dashboard/patients/).
+# django admin - only for testing, staff use /dashboard/patients/ instead
 from django.contrib import admin
 
 from .models import PatientProfile

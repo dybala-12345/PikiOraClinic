@@ -1,5 +1,3 @@
-"""Registration, role-based redirect after login, and patient profile."""
-
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -12,7 +10,7 @@ from .models import PatientProfile
 
 
 def register(request):
-    """Patient self-registration. The new patient is logged in straight away."""
+    # patient sign up page - logs them in straight after
     if request.user.is_authenticated:
         return redirect("accounts:after_login")
 
@@ -34,7 +32,7 @@ def register(request):
 
 @login_required
 def after_login(request):
-    """Send each role to its own starting page after logging in."""
+    # admins go to the dashboard, patients go to their appointments
     if is_clinic_admin(request.user):
         return redirect("dashboard:home")
     return redirect("clinic:my_appointments")
@@ -42,7 +40,7 @@ def after_login(request):
 
 @patient_required
 def profile(request):
-    """Patients can update their own contact details."""
+    # patients can edit their own details here
     patient_profile, _ = PatientProfile.objects.get_or_create(user=request.user)
 
     if request.method == "POST":

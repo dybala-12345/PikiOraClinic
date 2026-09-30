@@ -1,13 +1,8 @@
-"""Form helpers shared by every app."""
-
 from django import forms
 
 
 class BootstrapFormMixin:
-    """
-    Adds Bootstrap 5 CSS classes to every widget so templates stay simple
-    and all forms look consistent.
-    """
+    # adds bootstrap classes to all form fields so every form looks the same
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -24,7 +19,7 @@ class BootstrapFormMixin:
 
 
 class DateInput(forms.DateInput):
-    """HTML5 date picker."""
+    # date picker
 
     input_type = "date"
 
@@ -33,7 +28,7 @@ class DateInput(forms.DateInput):
 
 
 class TimeInput(forms.TimeInput):
-    """HTML5 time picker."""
+    # time picker
 
     input_type = "time"
 

@@ -1,5 +1,3 @@
-"""Forms used by the custom administrator dashboard."""
-
 from datetime import timedelta
 
 from django import forms
@@ -18,9 +16,7 @@ User = get_user_model()
 MAX_GENERATE_DAYS = 90
 
 
-# ---------------------------------------------------------------------------
-# Doctors
-# ---------------------------------------------------------------------------
+# doctors
 class DoctorForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Doctor
@@ -47,13 +43,11 @@ class DoctorScheduleForm(BootstrapFormMixin, forms.ModelForm):
     def __init__(self, *args, doctor=None, **kwargs):
         super().__init__(*args, **kwargs)
         if doctor is not None:
-            # Set before validation so the model's overlap check can run.
+            # set the doctor first so the overlap check works
             self.instance.doctor = doctor
 
 
-# ---------------------------------------------------------------------------
-# Appointment slots
-# ---------------------------------------------------------------------------
+# slots
 class SlotForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = AppointmentSlot
@@ -105,11 +99,9 @@ class SlotFilterForm(BootstrapFormMixin, forms.Form):
     show_past = forms.BooleanField(required=False, label="Include past slots")
 
 
-# ---------------------------------------------------------------------------
-# Appointments
-# ---------------------------------------------------------------------------
+# appointments
 class AdminAppointmentForm(BootstrapFormMixin, forms.Form):
-    """Administrators can move, re-status or annotate any appointment."""
+    # admin can change the time, status or notes of any appointment
 
     slot = SlotChoiceField(queryset=AppointmentSlot.objects.none(), label="Doctor, date and time")
     status = forms.ChoiceField(choices=Appointment.Status.choices)
@@ -143,15 +135,14 @@ class AppointmentFilterForm(BootstrapFormMixin, forms.Form):
     date_to = forms.DateField(required=False, label="To", widget=DateInput())
 
 
-# ---------------------------------------------------------------------------
-# Patient accounts
-# ---------------------------------------------------------------------------
+# patients
 class AdminPatientCreateForm(PatientRegistrationForm):
-    """Staff can create a patient account on someone's behalf (e.g. phone booking)."""
+    # admin can make a patient account for someone e.g. if they phone in
+    pass
 
 
 class AdminUserAccountForm(BootstrapFormMixin, forms.ModelForm):
-    """Login details of a patient that staff are allowed to change."""
+    # patient login details the admin can edit
 
     class Meta:
         model = User
@@ -171,4 +162,5 @@ class AdminUserAccountForm(BootstrapFormMixin, forms.ModelForm):
 
 
 class AdminSetPasswordForm(BootstrapFormMixin, SetPasswordForm):
-    """Staff can set a new password for a patient who is locked out."""
+    # admin sets a new password if a patient is locked out
+    pass

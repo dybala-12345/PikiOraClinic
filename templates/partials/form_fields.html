@@ -1,7 +1,4 @@
-{% comment %}
-    Renders every field of `form` with Bootstrap styling and error messages.
-    Usage: {% include "partials/form_fields.html" with form=my_form %}
-{% endcomment %}
+{# shows all the fields of a form with bootstrap styling + errors #}
 {% if form.non_field_errors %}
     <div class="alert alert-danger">
         {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}

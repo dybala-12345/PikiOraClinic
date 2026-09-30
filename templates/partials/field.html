@@ -1,4 +1,4 @@
-{# Renders a single form field with label, help text and errors. #}
+{# one form field with its label and errors #}
 <div class="mb-3">
     <label class="form-label" for="{{ field.id_for_label }}">
         {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}

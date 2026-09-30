@@ -1,5 +1,3 @@
-"""Forms for patient registration and profile management."""
-
 from datetime import date
 
 from django import forms
@@ -22,7 +20,7 @@ def validate_date_of_birth(value):
 
 
 class PatientRegistrationForm(BootstrapFormMixin, UserCreationForm):
-    """Creates a patient login (User) and the matching PatientProfile together."""
+    # makes the user login and the patient profile at the same time
 
     first_name = forms.CharField(max_length=150)
     last_name = forms.CharField(max_length=150)
@@ -48,7 +46,7 @@ class PatientRegistrationForm(BootstrapFormMixin, UserCreationForm):
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]
         user.email = self.cleaned_data["email"]
-        user.is_staff = False  # registration can only ever create patients
+        user.is_staff = False  # sign up can only make patients, not staff
         if commit:
             user.save()
             PatientProfile.objects.create(
@@ -60,7 +58,7 @@ class PatientRegistrationForm(BootstrapFormMixin, UserCreationForm):
 
 
 class UserDetailsForm(BootstrapFormMixin, forms.ModelForm):
-    """Name and e-mail of an existing user."""
+    # name + email of the user
 
     class Meta:
         model = User
@@ -80,7 +78,7 @@ class UserDetailsForm(BootstrapFormMixin, forms.ModelForm):
 
 
 class PatientProfileForm(BootstrapFormMixin, forms.ModelForm):
-    """Clinic-specific patient details."""
+    # extra patient info (phone, dob, address)
 
     class Meta:
         model = PatientProfile

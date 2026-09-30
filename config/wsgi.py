@@ -1,4 +1,4 @@
-"""WSGI entry point - used by gunicorn on Render."""
+# used by gunicorn on render
 
 import os
 

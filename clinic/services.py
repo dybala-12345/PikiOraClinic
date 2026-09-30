@@ -1,15 +1,9 @@
-"""
-Business logic for bookings, kept out of the views so the same rules apply
-whether a patient or an administrator changes an appointment.
-
-Double booking is prevented in three layers:
-  1. Only *available* slots are ever offered in the UI.
-  2. Inside a database transaction the slot row is locked
-     (SELECT ... FOR UPDATE on PostgreSQL) and re-checked before saving.
-  3. A partial unique constraint in the database
-     (``one_active_booking_per_slot``) rejects a second active booking even
-     if two requests arrive at exactly the same moment.
-"""
+# booking logic is here so patients and admins follow the same rules
+#
+# double booking is stopped 3 ways:
+# 1. only free slots are shown
+# 2. the slot row is locked while saving (select_for_update) and checked again
+# 3. the database has a unique constraint so a slot can't have 2 active bookings
 
 import logging
 from datetime import datetime, timedelta
@@ -24,14 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 class BookingError(Exception):
-    """Raised when a booking or change is not allowed. Message is user-friendly."""
+    # error for when a booking isn't allowed - the message is shown to the user
+    pass
 
 
-# ---------------------------------------------------------------------------
-# Notifications
-# ---------------------------------------------------------------------------
+# notifications
 def notify(user, title, message, appointment=None):
-    """Create an in-app notification and e-mail the user a copy."""
+    # saves a notification and also emails the user
     Notification.objects.create(user=user, title=title, message=message, appointment=appointment)
     if user.email:
         try:
@@ -39,11 +32,11 @@ def notify(user, title, message, appointment=None):
                 subject=f"Piki Ora Medical Centre - {title}",
                 message=f"Kia ora {user.first_name or user.username},\n\n{message}\n\n"
                 "Ngā mihi,\nPiki Ora Medical Centre",
-                from_email=None,  # uses DEFAULT_FROM_EMAIL
+                from_email=None,  # uses DEFAULT_FROM_EMAIL from settings
                 recipient_list=[user.email],
                 fail_silently=False,
             )
-        except Exception:  # e-mail problems must never break a booking
+        except Exception:  # don't let an email error break the booking
             logger.exception("Could not send notification e-mail to %s", user.email)
 
 
@@ -56,9 +49,7 @@ def _appointment_summary(appointment):
     )
 
 
-# ---------------------------------------------------------------------------
-# Validation shared by booking and rescheduling
-# ---------------------------------------------------------------------------
+# checks used when booking and when changing
 def _lock_slot(slot_id):
     try:
         return AppointmentSlot.objects.select_for_update().select_related("doctor").get(pk=slot_id)
@@ -78,7 +69,7 @@ def _check_slot_bookable(slot, patient, ignore_appointment=None):
     if taken.exists():
         raise BookingError("Sorry, this slot has just been booked by someone else. Please choose another time.")
 
-    # A patient cannot be in two consultations at the same time.
+    # a patient can't have 2 appointments at the same time
     clash = Appointment.objects.booked().filter(
         patient=patient,
         slot__date=slot.date,
@@ -91,18 +82,16 @@ def _check_slot_bookable(slot, patient, ignore_appointment=None):
         raise BookingError("You already have another appointment at this time.")
 
 
-# ---------------------------------------------------------------------------
-# Public operations
-# ---------------------------------------------------------------------------
+# main functions
 def book_appointment(*, patient, slot_id, reason):
-    """Book a slot for a patient. Returns the new Appointment."""
+    # books a slot for a patient
     try:
         with transaction.atomic():
             slot = _lock_slot(slot_id)
             _check_slot_bookable(slot, patient)
             appointment = Appointment.objects.create(patient=patient, slot=slot, reason=reason)
     except IntegrityError:
-        # Another request won the race and the database constraint fired.
+        # someone else booked it at the same moment - the db constraint caught it
         raise BookingError("Sorry, this slot has just been booked by someone else. Please choose another time.") from None
 
     notify(
@@ -117,10 +106,7 @@ def book_appointment(*, patient, slot_id, reason):
 
 
 def change_appointment(appointment, *, new_slot_id, reason, changed_by_admin=False, status=None, admin_notes=None):
-    """
-    Move an appointment to another slot and/or update its details.
-    Used by patients (edit) and administrators (edit any appointment).
-    """
+    # move an appointment or update it - used by patient edit and admin edit
     old_slot_id = appointment.slot_id
     try:
         with transaction.atomic():
@@ -158,7 +144,7 @@ def change_appointment(appointment, *, new_slot_id, reason, changed_by_admin=Fal
 
 
 def cancel_appointment(appointment, *, cancelled_by_admin=False):
-    """Cancel a booked appointment. The slot becomes available again."""
+    # cancel it so the slot is free again
     if appointment.status != Appointment.Status.BOOKED:
         raise BookingError("Only booked appointments can be cancelled.")
     appointment.status = Appointment.Status.CANCELLED
@@ -176,11 +162,8 @@ def cancel_appointment(appointment, *, cancelled_by_admin=False):
 
 
 def generate_slots(*, start_date, end_date, doctors=None):
-    """
-    Create appointment slots from each doctor's weekly schedule for every
-    date in [start_date, end_date]. Existing or overlapping slots are skipped,
-    so running it twice is safe. Returns the number of slots created.
-    """
+    # makes slots from each doctor's weekly schedule between the 2 dates
+    # skips slots that already exist so it's safe to run again
     if doctors is None:
         doctors = Doctor.objects.filter(is_active=True)
     schedules = list(DoctorSchedule.objects.filter(doctor__in=doctors).select_related("doctor"))

@@ -1,14 +1,7 @@
-"""
-Role-based access control.
-
-The system has two roles:
-
-* Administrator - a staff user (``is_staff=True``). Uses the custom dashboard.
-* Patient       - any other active, logged-in user. Books appointments.
-
-All role checks go through the two helper functions below so the rule is
-defined in exactly one place.
-"""
+# roles:
+# admin = staff user, uses the dashboard
+# patient = any other logged in user, books appointments
+# all the role checks use the 2 functions below
 
 from functools import wraps
 
@@ -20,20 +13,16 @@ from django.shortcuts import redirect
 
 
 def is_clinic_admin(user):
-    """True for authorised clinic staff."""
     return user.is_authenticated and user.is_active and user.is_staff
 
 
 def is_patient(user):
-    """True for logged-in patients (non-staff users)."""
     return user.is_authenticated and user.is_active and not user.is_staff
 
 
-# ---------------------------------------------------------------------------
-# Function-based view decorators
-# ---------------------------------------------------------------------------
+# decorators for function views
 def patient_required(view_func):
-    """Only logged-in patients may use the view; staff go to the dashboard."""
+    # patients only - staff get sent to the dashboard
 
     @login_required
     @wraps(view_func)
@@ -47,7 +36,7 @@ def patient_required(view_func):
 
 
 def admin_required(view_func):
-    """Only clinic administrators may use the view."""
+    # admins only
 
     @login_required
     @wraps(view_func)
@@ -59,16 +48,10 @@ def admin_required(view_func):
     return wrapper
 
 
-# ---------------------------------------------------------------------------
-# Class-based view mixin
-# ---------------------------------------------------------------------------
+# mixin for class based views
 class AdminRequiredMixin(AccessMixin):
-    """
-    Protects every custom dashboard view.
-
-    Anonymous users are sent to the login page; logged-in non-staff users get
-    a 403 Forbidden page.
-    """
+    # used on all the dashboard pages
+    # not logged in -> login page, patient -> 403 error
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:

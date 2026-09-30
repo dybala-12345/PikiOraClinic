@@ -1,10 +1,5 @@
-"""
-Custom administrator dashboard.
-
-Every view here is restricted to clinic administrators (staff users) through
-``AdminRequiredMixin`` / ``admin_required``. The built-in Django Admin is
-not used for managing the system.
-"""
+# custom admin dashboard - every view here is admin only (AdminRequiredMixin / admin_required)
+# we don't use the built in django admin for this
 
 from datetime import timedelta
 
@@ -43,13 +38,11 @@ PAGE_SIZE = 20
 
 
 def patients_queryset():
-    """Patient accounts only - staff accounts are never managed from here."""
+    # only patient accounts, never staff
     return User.objects.filter(is_staff=False, is_superuser=False)
 
 
-# ---------------------------------------------------------------------------
-# Overview
-# ---------------------------------------------------------------------------
+# overview
 class DashboardHomeView(AdminRequiredMixin, TemplateView):
     template_name = "dashboard/home.html"
 
@@ -75,9 +68,7 @@ class DashboardHomeView(AdminRequiredMixin, TemplateView):
         return context
 
 
-# ---------------------------------------------------------------------------
-# Doctors
-# ---------------------------------------------------------------------------
+# doctors
 class DoctorListView(AdminRequiredMixin, ListView):
     template_name = "dashboard/doctor_list.html"
     context_object_name = "doctors"
@@ -199,9 +190,7 @@ def schedule_delete(request, pk):
     return redirect("dashboard:doctor_detail", pk=doctor_pk)
 
 
-# ---------------------------------------------------------------------------
-# Appointment slots
-# ---------------------------------------------------------------------------
+# slots
 class SlotListView(AdminRequiredMixin, ListView):
     template_name = "dashboard/slot_list.html"
     context_object_name = "slots"
@@ -308,7 +297,7 @@ def slot_toggle(request, pk):
 
 @admin_required
 def slot_generate(request):
-    """Create many slots at once from the doctors' weekly schedules."""
+    # create lots of slots at once from the weekly schedules
     form = GenerateSlotsForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         doctor = form.cleaned_data["doctor"]
@@ -329,9 +318,7 @@ def slot_generate(request):
     return render(request, "dashboard/slot_generate.html", {"form": form})
 
 
-# ---------------------------------------------------------------------------
-# Appointments
-# ---------------------------------------------------------------------------
+# appointments
 class AppointmentListView(AdminRequiredMixin, ListView):
     template_name = "dashboard/appointment_list.html"
     context_object_name = "appointments"
@@ -402,9 +389,7 @@ def appointment_cancel(request, pk):
     return render(request, "dashboard/appointment_cancel.html", {"appointment": appointment})
 
 
-# ---------------------------------------------------------------------------
-# Patient accounts
-# ---------------------------------------------------------------------------
+# patients
 class PatientListView(AdminRequiredMixin, ListView):
     template_name = "dashboard/patient_list.html"
     context_object_name = "patients"
@@ -518,7 +503,7 @@ def patient_set_password(request, pk):
 class PatientDeleteView(AdminRequiredMixin, DeleteView):
     template_name = "dashboard/confirm_delete.html"
     success_url = reverse_lazy("dashboard:patient_list")
-    # Must not be "user", or it would replace the logged-in admin in templates.
+    # can't be called 'user' or it replaces the logged in admin in the templates
     context_object_name = "patient"
 
     def get_queryset(self):

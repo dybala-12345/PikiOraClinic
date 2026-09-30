@@ -1,10 +1,5 @@
-"""
-Load demonstration data: doctors, weekly schedules, two weeks of slots, a
-demo administrator and a demo patient with one booking.
-
-    python manage.py seed_demo            # add demo data (safe to re-run)
-    python manage.py seed_demo --if-empty # only if there are no doctors yet
-"""
+# adds demo doctors, schedules, slots and 2 test users
+# run: python manage.py seed_demo  (add --if-empty to only run when there are no doctors yet)
 
 from datetime import time, timedelta
 
@@ -75,7 +70,7 @@ class Command(BaseCommand):
             doctor, _ = Doctor.objects.get_or_create(
                 first_name=data["first_name"], last_name=data["last_name"], defaults=data
             )
-            data["sessions"] = sessions  # keep the list reusable if the command runs again
+            data["sessions"] = sessions  # put it back so it still works if we run the command again
             for weekday, start_hour, end_hour in sessions:
                 DoctorSchedule.objects.get_or_create(
                     doctor=doctor,

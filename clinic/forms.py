@@ -1,5 +1,3 @@
-"""Patient-facing forms for booking and changing appointments."""
-
 from django import forms
 from django.db.models import Q
 
@@ -9,7 +7,7 @@ from .models import AppointmentSlot, Doctor
 
 
 class SlotChoiceField(forms.ModelChoiceField):
-    """Shows slots as 'Mon 14 Oct 2026, 10:00-10:15' instead of the default text."""
+    # shows the slot nicely e.g. 'Mon 14 Oct 2026, 10:00-10:15'
 
     def label_from_instance(self, obj):
         return obj.label
@@ -34,7 +32,7 @@ class BookingForm(BootstrapFormMixin, forms.Form):
 
 
 class AppointmentEditForm(BootstrapFormMixin, forms.Form):
-    """Lets a patient move their appointment to another free slot with the same doctor."""
+    # lets a patient move their booking to another free time with the same doctor
 
     slot = SlotChoiceField(queryset=AppointmentSlot.objects.none(), label="Date and time")
     reason = forms.CharField(
@@ -46,7 +44,7 @@ class AppointmentEditForm(BootstrapFormMixin, forms.Form):
     def __init__(self, *args, appointment, **kwargs):
         super().__init__(*args, **kwargs)
         self.appointment = appointment
-        # Free future slots for the same doctor, plus the slot already held.
+        # free slots for the same doctor + the one they already have
         free_slots = AppointmentSlot.objects.filter(doctor=appointment.slot.doctor).available()
         self.fields["slot"].queryset = AppointmentSlot.objects.filter(
             Q(pk__in=free_slots.values("pk")) | Q(pk=appointment.slot_id)
@@ -59,7 +57,7 @@ class AppointmentEditForm(BootstrapFormMixin, forms.Form):
 
 
 class DoctorFilterForm(BootstrapFormMixin, forms.Form):
-    """Search box on the public doctors page."""
+    # search/filter on the doctors page
 
     q = forms.CharField(required=False, label="Search", widget=forms.TextInput(attrs={"placeholder": "Name or specialisation"}))
     specialisation = forms.ChoiceField(required=False, choices=())

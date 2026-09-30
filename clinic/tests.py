@@ -1,6 +1,4 @@
-"""
-Automated tests - run with:  python manage.py test
-"""
+# tests - run with: python manage.py test
 
 from datetime import time, timedelta
 
@@ -19,7 +17,7 @@ User = get_user_model()
 
 
 class ClinicTestCase(TestCase):
-    """Shared test data: one doctor, two future slots, two patients, one admin."""
+    # test data for all the tests: 1 doctor, 2 slots, 2 patients, 1 admin
 
     @classmethod
     def setUpTestData(cls):
@@ -130,7 +128,7 @@ class SlotGenerationTests(TestCase):
         start = timezone.localdate() + timedelta(days=1)
         DoctorSchedule.objects.create(doctor=doctor, weekday=start.weekday(), start_time=time(9), end_time=time(10), slot_minutes=15)
         self.assertEqual(generate_slots(start_date=start, end_date=start), 4)
-        self.assertEqual(generate_slots(start_date=start, end_date=start), 0)  # safe to run twice
+        self.assertEqual(generate_slots(start_date=start, end_date=start), 0)  # running it again shouldn't make duplicates
 
 
 class DashboardAccessTests(ClinicTestCase):

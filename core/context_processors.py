@@ -1,13 +1,8 @@
-"""Values made available to every template."""
-
 from .permissions import is_clinic_admin, is_patient
 
 
 def clinic_context(request):
-    """
-    Role flags and the unread-notification count used by the navigation bar
-    so menus change depending on who is logged in.
-    """
+    # gives every template the user's role and unread notification count (for the navbar)
     user = request.user
     context = {
         "clinic_name": "Piki Ora Medical Centre",
@@ -16,7 +11,7 @@ def clinic_context(request):
         "unread_notifications": 0,
     }
     if context["is_patient"]:
-        # Imported here to avoid loading models when the app registry starts.
+        # import here so the models aren't loaded too early
         from clinic.models import Notification
 
         context["unread_notifications"] = Notification.objects.filter(

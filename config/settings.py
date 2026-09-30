@@ -1,11 +1,6 @@
-"""
-Django settings for the Piki Ora Medical Centre appointment system.
-
-Configuration values that change between environments (secret key, debug
-mode, database, allowed hosts, e-mail) are read from environment variables.
-Locally they can be placed in a `.env` file (see `.env.example`); on Render
-they are set in the service's "Environment" tab.
-"""
+# settings for piki ora
+# secret key, debug, database etc come from env variables
+# (.env file locally, environment tab on render)
 
 import os
 from pathlib import Path
@@ -16,55 +11,49 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load variables from a local .env file if one exists (ignored on Render).
+# load the .env file if there is one (render uses its own env vars)
 load_dotenv(BASE_DIR / ".env")
 
 
 def env_bool(name, default=False):
-    """Read a true/false environment variable."""
+    # reads True/False from env
     return os.environ.get(name, str(default)).strip().lower() in ("1", "true", "yes", "on")
 
 
 def env_list(name, default=""):
-    """Read a comma-separated environment variable into a list."""
+    # reads a comma separated list from env
     return [item.strip() for item in os.environ.get(name, default).split(",") if item.strip()]
 
 
-# ---------------------------------------------------------------------------
-# Core security settings
-# ---------------------------------------------------------------------------
+# security
 SECRET_KEY = os.environ.get(
     "SECRET_KEY",
     "django-insecure-local-development-key-change-me-in-production",
 )
 
-# DEBUG defaults to True for local development. Set DEBUG=False on Render.
+# debug is True locally, set DEBUG=False on render
 DEBUG = env_bool("DEBUG", True)
 
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 
-# Render provides the public hostname of the service automatically.
+# render gives us the site's hostname automatically
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
 
-# ---------------------------------------------------------------------------
-# Applications
-# ---------------------------------------------------------------------------
+# apps
 INSTALLED_APPS = [
-    # Django Admin is kept only for development/testing (see config/urls.py).
-    # It is NOT the administrator interface of this system - see the
-    # `dashboard` app for the custom administrator dashboard.
+    # django admin is only for testing, the real admin page is the dashboard app
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Project apps
+    # our apps
     "core",
     "accounts",
     "clinic",
@@ -103,11 +92,8 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# ---------------------------------------------------------------------------
-# Database
-# ---------------------------------------------------------------------------
-# Uses DATABASE_URL when it is set (PostgreSQL on Render / Neon), otherwise a
-# local SQLite file so the project runs straight away in PyCharm.
+# database
+# uses DATABASE_URL if it's set (neon postgres), otherwise sqlite for running locally
 DATABASES = {
     "default": dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
@@ -119,9 +105,7 @@ DATABASES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-# ---------------------------------------------------------------------------
-# Authentication
-# ---------------------------------------------------------------------------
+# login stuff
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -130,23 +114,19 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LOGIN_URL = "login"
-# After login users are sent to the page that matches their role.
+# after login send admins and patients to different pages
 LOGIN_REDIRECT_URL = "accounts:after_login"
 LOGOUT_REDIRECT_URL = "clinic:home"
 
 
-# ---------------------------------------------------------------------------
-# Internationalisation - the clinic is in New Zealand
-# ---------------------------------------------------------------------------
+# nz time and language
 LANGUAGE_CODE = "en-nz"
 TIME_ZONE = "Pacific/Auckland"
 USE_I18N = True
 USE_TZ = True
 
 
-# ---------------------------------------------------------------------------
-# Static files (served by WhiteNoise in production)
-# ---------------------------------------------------------------------------
+# static files (whitenoise serves them on render)
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
@@ -154,8 +134,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
-        # Compressed + cache-busted files in production; plain storage while
-        # developing (and while running tests) so no collectstatic is needed.
+        # compressed files on render, normal storage locally so we don't need collectstatic
         "BACKEND": (
             "django.contrib.staticfiles.storage.StaticFilesStorage"
             if DEBUG
@@ -165,12 +144,9 @@ STORAGES = {
 }
 
 
-# ---------------------------------------------------------------------------
-# E-mail (booking confirmations)
-# ---------------------------------------------------------------------------
-# By default e-mails are printed to the console/Render logs. To send real
-# e-mails set EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend and
-# the EMAIL_HOST* variables.
+# email (booking confirmations)
+# emails just print to the console / render logs by default
+# to send real emails change EMAIL_BACKEND to smtp and set the EMAIL_HOST stuff
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
@@ -180,15 +156,11 @@ EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Piki Ora Medical Centre <no-reply@pikiora.co.nz>")
 
 
-# ---------------------------------------------------------------------------
-# Messages - map Django's "error" level to Bootstrap's "danger" colour
-# ---------------------------------------------------------------------------
+# make django's error messages use bootstrap's red 'danger' colour
 MESSAGE_TAGS = {message_constants.ERROR: "danger"}
 
 
-# ---------------------------------------------------------------------------
-# Production hardening (only when DEBUG is off, e.g. on Render)
-# ---------------------------------------------------------------------------
+# extra security when DEBUG is off (on render)
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", True)

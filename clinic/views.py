@@ -1,5 +1,3 @@
-"""Public pages and patient booking views."""
-
 from datetime import timedelta
 from itertools import groupby
 
@@ -15,11 +13,11 @@ from .forms import AppointmentEditForm, BookingForm, DoctorFilterForm
 from .models import Appointment, AppointmentSlot, Doctor, DoctorSchedule, Notification
 from .services import BookingError, book_appointment, cancel_appointment, change_appointment
 
-BOOKING_WINDOW_DAYS = 30  # how far ahead patients can see available slots
+BOOKING_WINDOW_DAYS = 30  # patients can see slots up to 30 days ahead
 
 
 def _doctors_with_next_slot(queryset):
-    """Annotate each doctor with the date/time of their next free slot."""
+    # adds the next free slot date/time to each doctor
     next_slot = AppointmentSlot.objects.filter(doctor=OuterRef("pk")).available().order_by("date", "start_time")
     return queryset.annotate(
         next_slot_date=Subquery(next_slot.values("date")[:1]),
@@ -42,7 +40,7 @@ def home(request):
 
 
 def doctor_list(request):
-    """All active doctors with their weekly consultation schedule."""
+    # list of doctors + their weekly hours
     form = DoctorFilterForm(request.GET or None)
     doctors = Doctor.objects.filter(is_active=True)
     if form.is_valid():
@@ -62,7 +60,7 @@ def doctor_list(request):
 
 
 def doctor_detail(request, pk):
-    """A doctor's profile, weekly schedule and free slots grouped by day."""
+    # doctor page with free slots grouped by day
     doctors = Doctor.objects.all() if is_clinic_admin(request.user) else Doctor.objects.filter(is_active=True)
     doctor = get_object_or_404(doctors, pk=pk)
 
@@ -86,9 +84,7 @@ def doctor_detail(request, pk):
     )
 
 
-# ---------------------------------------------------------------------------
-# Patient booking (login required - patients only)
-# ---------------------------------------------------------------------------
+# booking pages (patients only, must be logged in)
 @patient_required
 def book(request, slot_id):
     slot = get_object_or_404(AppointmentSlot.objects.select_related("doctor"), pk=slot_id)
@@ -188,9 +184,7 @@ def appointment_cancel(request, pk):
     return render(request, "clinic/appointment_cancel.html", {"appointment": appointment})
 
 
-# ---------------------------------------------------------------------------
-# Notifications
-# ---------------------------------------------------------------------------
+# notifications
 @patient_required
 def notifications(request):
     items = list(Notification.objects.filter(user=request.user).select_related("appointment")[:50])

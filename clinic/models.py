@@ -1,12 +1,7 @@
-"""
-Data model for the clinic.
-
-    Doctor 1---* DoctorSchedule        weekly consultation hours
-    Doctor 1---* AppointmentSlot       bookable time slots on real dates
-    AppointmentSlot 1---* Appointment  (at most ONE active booking per slot)
-    User (patient) 1---* Appointment
-    User 1---* Notification            in-app confirmation messages
-"""
+# models for the clinic
+# doctor -> weekly schedules and appointment slots
+# slot -> appointments (only 1 active booking per slot)
+# patient -> appointments and notifications
 
 from datetime import datetime, timedelta
 
@@ -21,7 +16,7 @@ from accounts.models import phone_validator
 
 
 class TimeStampedModel(models.Model):
-    """Abstract base class adding created/updated timestamps."""
+    # adds created/updated dates to other models
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -30,9 +25,7 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
-# ---------------------------------------------------------------------------
-# Doctors and their weekly schedules
-# ---------------------------------------------------------------------------
+# doctors + weekly schedules
 class Doctor(TimeStampedModel):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -66,7 +59,7 @@ class Doctor(TimeStampedModel):
 
 
 class DoctorSchedule(models.Model):
-    """A recurring weekly consultation session, e.g. Monday 09:00-12:00."""
+    # a doctor's weekly session e.g. monday 9-12
 
     class Weekday(models.IntegerChoices):
         MONDAY = 0, "Monday"
@@ -123,26 +116,24 @@ class DoctorSchedule(models.Model):
                 raise ValidationError("This session overlaps another session for this doctor on the same day.")
 
 
-# ---------------------------------------------------------------------------
-# Appointment slots
-# ---------------------------------------------------------------------------
+# slots
 class AppointmentSlotQuerySet(models.QuerySet):
     def upcoming(self):
-        """Slots that have not started yet (in clinic local time)."""
+        # slots that haven't started yet (nz time)
         now = timezone.localtime()
         return self.filter(
             Q(date__gt=now.date()) | Q(date=now.date(), start_time__gt=now.time())
         )
 
     def with_booking_status(self):
-        """Adds ``has_booking`` (True/False) using a single efficient subquery."""
+        # adds has_booking = True/False to each slot
         active_booking = Appointment.objects.filter(
             slot=OuterRef("pk"), status=Appointment.Status.BOOKED
         )
         return self.annotate(has_booking=Exists(active_booking))
 
     def available(self):
-        """Future, open slots of active doctors that nobody has booked."""
+        # free future slots (slot open, doctor active, not booked)
         return (
             self.upcoming()
             .filter(is_active=True, doctor__is_active=True)
@@ -152,7 +143,7 @@ class AppointmentSlotQuerySet(models.QuerySet):
 
 
 class AppointmentSlot(TimeStampedModel):
-    """A specific bookable time with a doctor, e.g. 14 Oct 2026 10:00-10:15."""
+    # one bookable time e.g. 14 oct 10:00-10:15
 
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name="slots")
     date = models.DateField()
@@ -197,7 +188,7 @@ class AppointmentSlot(TimeStampedModel):
             if overlapping.exists():
                 raise ValidationError("This slot overlaps an existing slot for the same doctor.")
 
-    # -- helpers used by views and templates --------------------------------
+    # helpers for the views/templates
     @property
     def start_datetime(self):
         return timezone.make_aware(datetime.combine(self.date, self.start_time))
@@ -208,7 +199,7 @@ class AppointmentSlot(TimeStampedModel):
 
     @property
     def is_booked(self):
-        if hasattr(self, "has_booking"):  # value from with_booking_status()
+        if hasattr(self, "has_booking"):  # set by with_booking_status()
             return self.has_booking
         return self.appointments.filter(status=Appointment.Status.BOOKED).exists()
 
@@ -223,9 +214,7 @@ class AppointmentSlot(TimeStampedModel):
         return f"{self.date:%a %d %b %Y}, {self.start_time:%H:%M}-{self.end_time:%H:%M}"
 
 
-# ---------------------------------------------------------------------------
-# Appointments
-# ---------------------------------------------------------------------------
+# appointments
 class AppointmentQuerySet(models.QuerySet):
     def booked(self):
         return self.filter(status=Appointment.Status.BOOKED)
@@ -256,7 +245,7 @@ class Appointment(TimeStampedModel):
         on_delete=models.CASCADE,
         related_name="appointments",
     )
-    # PROTECT: a slot that has appointment history cannot be deleted by accident.
+    # PROTECT so a slot with appointment history can't be deleted by mistake
     slot = models.ForeignKey(AppointmentSlot, on_delete=models.PROTECT, related_name="appointments")
     reason = models.TextField("Reason for visit", max_length=500)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.BOOKED)
@@ -268,9 +257,8 @@ class Appointment(TimeStampedModel):
     class Meta:
         ordering = ["slot__date", "slot__start_time"]
         constraints = [
-            # Database-level guarantee against double booking: only one
-            # appointment with status "booked" may exist for a slot.
-            # Cancelled appointments are kept for history and don't count.
+            # stops double booking in the database itself - only 1 'booked' appointment per slot
+            # cancelled ones are kept for history and don't count
             models.UniqueConstraint(
                 fields=["slot"],
                 condition=Q(status="booked"),
@@ -292,12 +280,12 @@ class Appointment(TimeStampedModel):
 
     @property
     def can_be_changed(self):
-        """Patients may only edit/cancel booked appointments that are still in the future."""
+        # patient can only edit/cancel if it's still booked and in the future
         return self.is_active_booking and not self.slot.is_past
 
     @property
     def status_badge(self):
-        """Bootstrap colour used for the status label in templates."""
+        # bootstrap colour for the status label
         return {
             self.Status.BOOKED: "success",
             self.Status.CANCELLED: "secondary",
@@ -308,11 +296,9 @@ class Appointment(TimeStampedModel):
         return reverse("clinic:appointment_detail", args=[self.pk])
 
 
-# ---------------------------------------------------------------------------
-# Notifications
-# ---------------------------------------------------------------------------
+# notifications
 class Notification(models.Model):
-    """In-app message shown to a patient, e.g. a booking confirmation."""
+    # message shown to the patient e.g. booking confirmed
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

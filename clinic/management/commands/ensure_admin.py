@@ -1,10 +1,5 @@
-"""
-Create (or update) the clinic administrator account from environment
-variables. Used on Render, where there is no interactive shell on the
-free plan:
-
-    ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD
-"""
+# creates the admin account from env variables (ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD)
+# needed on render because the free plan has no shell
 
 import os
 
